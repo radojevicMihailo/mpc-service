@@ -20,7 +20,7 @@ pub struct MpcCurvy{
 }
 
 impl MpcCurvy{
-    async fn gen_exec_id(&mut self) -> Vec<u8>{
+    pub async fn gen_exec_id(&mut self) -> Vec<u8>{
         let mut rand_bytes = [0u8; 16]; 
         OsRng.fill_bytes(&mut rand_bytes);
         let my_nonce = rand_bytes.to_vec();
@@ -56,7 +56,7 @@ impl MpcCurvy{
         exec_id.to_vec()
     }
     
-    fn update_shares_and_complete(incomplete_key_share: IncompleteKeyShare<Secp256k1>, b: BigInt<4>, aux_info: Valid<DirtyAuxInfo>) -> Result<cggmp21::KeyShare<Secp256k1, SecurityLevel128>, Box<dyn Error>>{
+    pub fn update_shares_and_complete(incomplete_key_share: IncompleteKeyShare<Secp256k1>, b: BigInt<4>, aux_info: Valid<DirtyAuxInfo>) -> Result<cggmp21::KeyShare<Secp256k1, SecurityLevel128>, Box<dyn Error>>{
         let mut dirty_shares = incomplete_key_share.into_inner();
         
         let b_bytes = b.to_bytes_be();
