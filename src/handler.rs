@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use ark_bn254::{Bn254, G2Affine};
@@ -45,10 +44,7 @@ pub async fn key_generation_handler(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let Query(opts) = opts.unwrap_or_default();
 
-    let mut protocol = MpcCurvy::new(opts.local_party_id.unwrap(), opts.n.unwrap()).await.unwrap();
-
-    let exec_id = protocol.gen_exec_id().await;
-    let eid = ExecutionId::new(&exec_id);
+    let eid = ExecutionId::new(&opts.exec_id);
 
     let network_setup = NetworkSetup::setup_swarm(opts.local_party_id.unwrap(), opts.n.unwrap()).await.unwrap();
     let swarm = Arc::new(Mutex::new(network_setup.swarm));
@@ -61,6 +57,7 @@ pub async fn key_generation_handler(
 
     println!("Generating key shares...");
     let incomplete_key_share = cggmp21::keygen::<Secp256k1>(eid, opts.local_party_id.unwrap(), opts.n.unwrap())
+        .set_threshold(opts.t)
         .start(&mut OsRng, party)
         .await;
 
@@ -84,10 +81,7 @@ pub async fn sign_transaction_handler(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let Query(opts) = opts.unwrap_or_default();
 
-    let mut protocol = MpcCurvy::new(opts.local_party_id.unwrap(), opts.n.unwrap()).await.unwrap();
-
-    let exec_id = protocol.gen_exec_id().await;
-    let eid = ExecutionId::new(&exec_id);
+    let eid = ExecutionId::new(&opts.exec_id);
 
     let network_setup = NetworkSetup::setup_swarm(opts.local_party_id.unwrap(), opts.n.unwrap()).await.unwrap();
     let swarm = Arc::new(Mutex::new(network_setup.swarm));
