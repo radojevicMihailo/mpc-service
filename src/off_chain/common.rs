@@ -7,7 +7,7 @@ use secp256k1::PublicKey;
 use sha2::{Digest, Sha256};
 use sha3::Keccak256;
 
-pub(crate) fn compute_viewtag(data: &G1Affine, version: usize) -> Result<String, Box<dyn Error>>{
+pub fn compute_viewtag(data: &G1Affine, version: usize) -> Result<String, Box<dyn Error>>{
     match version{
         0 => {
             let x = data.x().ok_or("Point at infty")?.into_bigint().to_bytes_be()[0]; 
@@ -25,7 +25,7 @@ pub(crate) fn compute_viewtag(data: &G1Affine, version: usize) -> Result<String,
     }    
 }
 
-pub(crate) fn get_first_coordinate(x: &Fq12) -> BigInt<4>{
+pub fn get_first_coordinate(x: &Fq12) -> BigInt<4>{
     x.c0.c0.c0.into_bigint()
 }
 

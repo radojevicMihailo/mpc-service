@@ -1,6 +1,9 @@
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
+use ark_bn254::{Bn254, G2Affine};
+use ark_ec::pairing::Pairing;
+use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::BigInt;
 use axum::{
     extract::Query, http::StatusCode, response::IntoResponse, Json
@@ -10,9 +13,11 @@ use cggmp21::security_level::SecurityLevel128;
 use cggmp21::supported_curves::Secp256k1;
 use cggmp21::{round_based, DataToSign, ExecutionId, PregeneratedPrimes};
 
+use mpc_service::off_chain::common::{compute_viewtag, get_first_coordinate};
 use mpc_service::off_chain::network::sink::OutgoingSink;
 use mpc_service::off_chain::network::{setup::NetworkSetup, stream::IncomingStream};
 use mpc_service::off_chain::protocol::MpcCurvy;
+use mpc_service::off_chain::utils::{deserialize_affine_point, deserialize_field_element};
 use rand_core::OsRng;
 use sha2::Sha256;
 
@@ -101,7 +106,19 @@ pub async fn sign_transaction_handler(
         .await;
     println!("Aux info generated...");
 
-    let b = BigInt::from_str("4").unwrap();
+    let g2 = G2Affine::generator(); 
+
+    let viewing_sk = deserialize_field_element(&opts.viewing_sk).unwrap();
+    let ephemeral_pk = deserialize_affine_point(&opts.entry).unwrap();  
+
+    let v_r_product = (ephemeral_pk * viewing_sk).into_affine(); 
+    let computed_viewtag = compute_viewtag(&v_r_product, opts.view_tag_version).unwrap(); 
+
+    let mut b: BigInt<4>;
+    if *opts.viewtag == computed_viewtag{      
+        let ss =  Bn254::pairing(&v_r_product, &g2).0;
+        b = get_first_coordinate(&ss);
+    }
     let key_share = MpcCurvy::update_shares_and_complete(opts.incomplete_key_share, b, aux_info.unwrap());
 
     let mut parties_indexes_at_keygen = vec!(); 

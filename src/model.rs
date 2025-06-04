@@ -11,4 +11,8 @@ pub struct SignTransactionReqBody {
     pub n: Option<u16>,
     pub local_party_id: Option<u16>,
     pub incomplete_key_share: String,
+    pub entry: String,
+    pub viewing_sk: String,
+    pub view_tag_version: usize,
+    pub viewtag: String,
 }
